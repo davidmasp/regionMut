@@ -32,7 +32,7 @@ option_list = list(
               default = "Hsapiens.UCSC.hg19",
               type='character',
               help="genome alias installed in ur system [default %default]"),
-  make_option(c("-r", "--mutRef"),
+  make_option(c("-R", "--mutRef"),
               action="store",
               default = "C,A",
               type='character',
