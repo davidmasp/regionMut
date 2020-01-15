@@ -15,7 +15,7 @@ available_modes = fs::dir_ls(path) %>%
   fs::path_file() %>%
   stringr::str_extract("(?<=regionMut_)[:alnum:]+(?=.R)")
 
-pv = package.version("regionMut")
+pv = utils::packageVersion("regionMut")
 message(strwrap(glue::glue("regionMut ({pv})"), prefix = " ", initial = ""))
 
 message("Available Modes:")
