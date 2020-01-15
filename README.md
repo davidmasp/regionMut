@@ -76,10 +76,13 @@ performed before this.
 
 ### Input files
 
-to fill
+The complete usage of regionMut will require 2 input configuration
+files. One will contain the information about region channels and bins
+within those and the other will configure the regression parameters used
+in the analysis.
 
-An example of how the input table should look is found
-[here](inst/testdata/test_bins.tsv)
+  - An example of how the **input table** should look is found
+    [here](inst/testdata/test_bins.tsv):
 
 | master\_name | bins     | file\_name                                      | strand |
 | :----------- | :------- | :---------------------------------------------- | :----- |
@@ -91,6 +94,40 @@ An example of how the input table should look is found
 | bed2         | M        | inst/testdata/test\_bed2\_binM.bed              | \*     |
 | bed3         | S\_plus  | inst/testdata/test\_bed3\_binS\_featOnPlus.bed  | \+     |
 | bed3         | S\_minus | inst/testdata/test\_bed3\_binS\_featOnMinus.bed | \-     |
+
+  - The **formula specifications** should be set via a yaml file, an
+    example can be found [here](test.yml):
+
+<!-- end list -->
+
+    formula:
+      value: ms_counts_all
+      variables: bed1 + bed2 + bed3
+      offset: TRUE
+    
+    levels:
+      bed1:
+        - a
+        - b
+        - c
+      bed2:
+        - K
+        - L
+        - M
+      bed3:
+        - bed3_S_ref
+        - bed3_antiS_ref
+    
+    ci:
+      method: profile
+      alpha: 0.05
+      variables: bed3
+    
+    ## the strand is a bit complicated, you can use:
+    ## - {feature}_{binName}_ref
+    ## - {feature}_anti{binName}_ref
+    
+    ## IMPLEMENT COMPARISIONS NEXT!
 
 ### Arguments
 

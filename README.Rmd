@@ -89,16 +89,25 @@ performed before this.
 
 ### Input files
 
-to fill
+The complete usage of regionMut will require 2 input configuration files.
+One will contain the information about region channels and bins within those
+and the other will configure the regression parameters used in the
+analysis.
 
-An example of how the input table should look is
-found [here](inst/testdata/test_bins.tsv)
+* An example of how the **input table** should look is
+found [here](inst/testdata/test_bins.tsv):
 
 ```{r message=FALSE, results='asis', echo=FALSE}
 dat = readr::read_tsv("inst/testdata/test_bins.tsv")
 knitr::kable(dat)
 ```
 
+* The **formula specifications** should be set via a yaml file, an example can be
+found [here](test.yml):
+
+```{r comment='', , echo=FALSE}
+cat(readLines('test.yml'), sep = '\n')
+```
 
 ### Arguments
 

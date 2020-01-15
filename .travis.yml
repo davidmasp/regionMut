@@ -1,8 +1,8 @@
 branches:
   only:
   - master
-  - develop
-# only this branches will build
+#  - develop
+# only these branches will build
 
 language: r
 # this means these steps will be executed:
