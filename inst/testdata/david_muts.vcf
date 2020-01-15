@@ -1,0 +1,15 @@
+##fileformat=VCFv4.1
+##fileDate=20200115
+##phasing=unphased
+##source=VariantAnnotation 1.30.1
+##FORMAT=<ID=AD,Number=2,Type=Integer,Description="Allelic depths (number of reads in each observed allele)">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##FORMAT=<ID=FT,Number=1,Type=String,Description="Variant filters">
+##contig=<ID=chr1>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	David
+chr1	1000025	.	N	H	.	.	.		
+chr1	1000075	.	N	H	.	.	.		
+chr1	1000125	.	N	H	.	.	.		
+chr1	1000175	.	N	H	.	.	.		
+chr1	1000225	.	N	H	.	.	.		
+chr1	1000275	.	N	H	.	.	.		
