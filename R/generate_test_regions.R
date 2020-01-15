@@ -12,6 +12,8 @@
 #'
 generate_test_regions <- function() {
 
+  set.seed(42)
+
   ofolder = "inst/testdata"
   fs::dir_create(ofolder)
 
@@ -96,6 +98,30 @@ generate_test_regions <- function() {
                    path = "inst/testdata/test_bins_nostrand.tsv")
   readr::write_tsv(x = rbind(ref_table,ref_table_s),
                    path = "inst/testdata/test_bins.tsv")
+
+
+  # Now I generate the mutations file
+  library(VariantAnnotation)
+
+  nmuts = c(1500,1000)
+  total_size = seqlengths(g)[1:2]
+
+  pos1 = sample(size = nmuts[1],x = total_size[1],replace = F)
+  pos2 = sample(size = nmuts[2],x = total_size[2],replace = F)
+
+  VRanges(
+    seqnames = c(rep("chr1", nmuts[1]),rep("chr2", nmuts[2])),
+    ranges = IRanges(
+      start = c(pos1,pos2),
+      width = 1
+    ),
+    ref = "R",
+    alt = "A",
+    sampleNames = "sampleA"
+  ) -> dat_vr
+  dat_vcf = as(object = dat_vr,Class = "VCF")
+  writeVcf(obj = dat_vcf,filename = fs::path(ofolder,"test_vcf.vcf"))
+
 }
 
 
@@ -109,6 +135,7 @@ generate_test_regions <- function() {
 #' # no run
 #'
 generate_test_regions2 <- function() {
+  set.seed(42)
 
   library(GenomicRanges)
   library(magrittr)
