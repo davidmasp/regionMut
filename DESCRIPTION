@@ -23,5 +23,7 @@ Imports:
     rtracklayer,
     helperMut,
     yaml,
-    MASS
+    MASS,
+    fs,
+    stringr
 Remotes: davidmasp/helperMut

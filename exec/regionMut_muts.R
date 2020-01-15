@@ -1,0 +1,244 @@
+#!/usr/bin/env Rscript
+
+# Name: regionMut muts
+# Author: DMP
+# Description: Count mutations in the given region sites
+
+
+# params ------------------------------------------------------------------
+
+suppressPackageStartupMessages(require(optparse))
+option_list = list(
+  make_option(c("-m", "--mutations"),
+              action="store",
+              type='character',
+              help="vcf file [default %default]"),
+  make_option(c("-r", "--regions"),
+              action="store",
+              type='character',
+              help="list of regions comming from region subcommand [default %default]"),
+  make_option(c("-N", "--nSamples"),
+              action="store",
+              default = NULL,
+              type='integer',
+              help="Number of samples, if null, # of samp in the vcf [default %default]"),
+  make_option(c("-k", "--kmer"),
+              action="store",
+              default = 1,
+              type='integer',
+              help="kmer of the mutation type [default %default]"),
+  make_option(c("-g", "--genome"),
+              action="store",
+              default = "Hsapiens.UCSC.hg19",
+              type='character',
+              help="genome alias installed in ur system [default %default]"),
+  make_option(c("-r", "--mutRef"),
+              action="store",
+              default = "C,A",
+              type='character',
+              help="Comma separated mutation reference set [default %default]"),
+  make_option(c("-p", "--prefix"),
+              action="store",
+              default = "output",
+              type='character',
+              help="Output prefix [default %default]"),
+  make_option(c("-f", "--folder"),
+              action="store",
+              default = ".",
+              type='character',
+              help="Output folder [default %default]"),
+  make_option(c("-v", "--verbose"),
+              action="store_true",
+              default=FALSE,
+              help="verbosity [default %default]")
+)
+opt = parse_args(OptionParser(option_list=option_list))
+
+options(verbose = opt$verbose)
+
+if(interactive()){
+  opt$regions = "output_int_regions.rds"
+  opt$mutations = "inst/testdata/test_vcf.vcf"
+}
+
+# imports -----------------------------------------------------------------
+
+suppressPackageStartupMessages(library(VariantAnnotation))
+library(helperMut)
+library(GenomicRanges)
+library(magrittr)
+library(regionMut)
+
+# data --------------------------------------------------------------------
+
+dat_vcf = readVcf(opt$mutations)
+dat_vr = as(dat_vcf,"VRanges")
+
+mcols(dat_vr) = NULL
+
+## indel filter
+nchar_ref = nchar(ref(dat_vr))
+nchar_alt = nchar(alt(dat_vr))
+indel_mask  = ref(dat_vr) == "-" | nchar_alt > 1 | nchar_ref > 1
+ol = length(dat_vr)
+dat_vr = dat_vr[!indel_mask]
+el= length(dat_vr)
+warning(glue::glue("Indel positions removed, {scales::percent(1 - (el/ol))} positions removed" ))
+
+### just to check
+# should check for shitty double sampled vcfs
+if(any(grepl(pattern = "NORMAL",x = sampleNames(dat_vr)))){
+  stop("You have a normal sample in your vcf")
+}
+
+if (length(unique(sampleNames(dat_vr))) > 1){
+  stop("Unisample vcf are required, remove sample info and add -N arg")
+}
+
+if (is.null(opt$N)){
+  N_samples = 1
+}
+
+regions = readRDS(opt$regions)
+
+# script ------------------------------------------------------------------
+
+
+## filtering chromosome + names
+genome = helperMut::genome_selector(alias = opt$genome)
+
+reg_sqls = seqlevelsStyle(regions[[1]])
+muts_sqls = seqlevelsStyle(dat_vr)
+genome_sqls = seqlevelsStyle(genome)
+
+if (genome_sqls != reg_sqls){
+  stop("wrong genome")
+} else if (reg_sqls != muts_sqls){
+  warning("Switching Seq Level styles for mutations")
+  seqlevelsStyle(dat_vr) = reg_sqls
+}
+
+# mutation work -----------------------------------------------------------
+
+regions_grl = GRangesList(regions)
+sqlevels = seqlevels(regions_grl)
+
+## assigning mutations
+ovr = findOverlaps(query = dat_vr,subject = regions_grl)
+
+## subset the mutations inside the regions
+ol = length(dat_vr)
+dat_vr = dat_vr[queryHits(ovr)]
+el = length(dat_vr)
+perc = scales::percent(el/ol)
+warning(glue::glue("{perc} of mutations found in regions"))
+
+## also drop unused chr
+dat_vr = keepSeqlevels(dat_vr,value = sqlevels)
+
+strand_ref_vec = unlist(lapply(regions_grl, function(x){
+  unique(as.character(strand(x)))
+  }))
+strand_reg = strand_ref_vec[subjectHits(ovr)]
+# I think this is not necessary
+dat_vr = dat_vr[queryHits(ovr)]
+strand(dat_vr) = strand_reg
+
+## obtain MS
+MS = helperMut::get_MS_VR(x = dat_vr,
+                     k = opt$kmer,
+                     genome = genome,
+                     keep_strand = TRUE)
+
+rg_id = regions %>% purrr::map_df(function(x){
+  dplyr::distinct(as.data.frame(mcols(x)))
+})
+
+stopifnot(all(rownames(rg_id) == as.integer(rg_id$id)))
+
+features_df = rg_id[subjectHits(ovr),]
+rownames(features_df) = NULL
+
+MS = factor(MS,
+            levels = helperMut::generate_mut_types(
+              k = opt$kmer,
+              simplify_set = Biostrings::DNA_BASES))
+
+# I need to do this because the 0 are not couted otherwise
+table(MS,id = features_df$id) %>% as.data.frame() -> MS_df
+
+
+rg_id$id = factor(rg_id$id)
+dplyr::full_join(MS_df,rg_id) -> res_df
+
+# prepare refset
+ref_set = unlist(strsplit(opt$mutRef,split = ","))
+stopifnot(length(ref_set) == 2)
+
+## Now grouping by strand
+strandLess = all(strand(dat_vr) == "*")
+
+if (strandLess){
+  cnames = colnames(res_df)
+  cnames = cnames[4:ncol(res_df)]
+  group_vars = cnames
+  res_df$ms_simp = helperMut::simplify_muts(as.character(res_df$MS),
+                                              simplify_set = ref_set)
+  res_df %>% dplyr::group_by_at(c(group_vars,"ms_simp")) %>%
+    dplyr::summarise(ms_counts_all = sum(Freq)) -> res_df_all_simp
+} else{
+  # with strand info
+  # find which columns have the strand info
+  cnames = colnames(res_df)
+  cnames = cnames[4:ncol(res_df)]
+
+  ## strand features need to carry minus
+  strand_mask = res_df[,cnames] %>% purrr::map(grepl,
+                                               pattern = "minus" ) %>%
+    purrr::map_lgl(any)
+  group_vars = cnames[!strand_mask]
+  group_vars_std = cnames[strand_mask]
+
+  stopifnot(length(group_vars_std) == 1)
+
+  res_df[[group_vars_std]] %>%
+    stringr::str_extract("(?<=_)[:alnum:]+") -> std_group
+
+  res_df[[group_vars_std]] %>%
+    stringr::str_extract("[:alnum:]+(?=_)") -> feat_group
+
+  feat_group = unique(feat_group)
+  stopifnot(length(feat_group) == 1)
+
+  res_df$ms_strand_switched = ifelse(
+    std_group == "minus",
+    helperMut::ms_reverse_complement(as.character(res_df$MS)),
+    as.character(res_df$MS)
+  )
+
+  res_df$ms_simplified =
+    helperMut::simplify_muts(muts = as.character(res_df$MS),
+                             simplify_set = ref_set)
+
+  feat_name_true = glue::glue("{group_vars_std}_{feat_group}_ref")
+  feat_name_false = glue::glue("{group_vars_std}_anti{feat_group}_ref")
+  k = opt$kmer
+
+  res_df[[group_vars_std]] = ifelse(
+    substr(x = res_df$ms_strand_switched, k + 1, k + 1) %in% ref_set,
+    feat_name_true,
+    feat_name_false
+  )
+
+  res_df %>% dplyr::ungroup() %>%
+    dplyr::group_by_at(c(group_vars,group_vars_std,"ms_simplified")) %>%
+    dplyr::summarise(ms_counts_all = sum(Freq)) -> res_df_all_simp
+}
+
+res_df_all_simp$N_samples = N_samples
+
+# output ------------------------------------------------------------------
+opath = fs::path(opt$folder,
+                 glue::glue("{opt$prefix}_counts.tsv"))
+readr::write_tsv(x = res_df_all_simp,
+                 path = opath)
