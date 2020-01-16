@@ -45,12 +45,13 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
-  opt$regions = "inst/testdata/test_bins.tsv"
+  #opt$regions = "inst/testdata/test_bins.tsv"
+  opt$regions = "input_bed_file.tsv"
 }
 
 # imports -----------------------------------------------------------------
 
-library(GenomicRanges)
+suppressPackageStartupMessages(library(GenomicRanges))
 library(magrittr)
 library(regionMut)
 
@@ -86,11 +87,11 @@ stopifnot(length(ref_set) == 2)
 ## extract metadata from regions
 
 std_tmp = purrr::map_chr(regions,function(x){as.character(unique(strand(x)))})
-strandLess = all(unique(std_tmp) == "*") & (length(std_tmp) == 1)
+strandLess = all(unique(std_tmp) == "*") & (length(unique(std_tmp)) == 1)
 
 ## extract and join metadata which is stored in regions
 purrr::map_df(regions,function(x){
-dplyr::distinct(as.data.frame(mcols(x)))
+  dplyr::distinct(as.data.frame(mcols(x)))
 }) -> r_ids
 
 r_ids$id  = as.character( r_ids$id )
@@ -106,12 +107,11 @@ if (strandLess){
   offset_df_all %>% dplyr::group_by_at(c(group_vars,"ctx")) %>%
     dplyr::summarise(ctx_counts_all = sum(ctx_counts)) -> offset_df_all_simp
 } else {
-
   ## This is only if strand is enforced
   strand_mask = input_ref_data$strand == "*"
   group_vars = unique(input_ref_data[strand_mask,][["master_name"]])
   group_vars_std = unique(input_ref_data[!strand_mask,][["master_name"]])
-
+  print("Strand mode in")
   stopifnot(length(group_vars_std) == 1)
 
   offset_df_all[[group_vars_std]] %>%
