@@ -251,6 +251,8 @@ if (strandLess){
 res_df_all_simp$N_samples = N_samples
 
 # output ------------------------------------------------------------------
+
+fs::dir_create(opt$folder)
 opath = fs::path(opt$folder,
                  glue::glue("{opt$prefix}_counts.tsv"))
 readr::write_tsv(x = res_df_all_simp,

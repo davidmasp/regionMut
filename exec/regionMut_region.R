@@ -45,8 +45,8 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
-  #opt$regions = "inst/testdata/test_bins.tsv"
-  opt$regions = "input_bed_file.tsv"
+  opt$regions = "inst/testdata/test_bins.tsv"
+  #opt$regions = "input_bed_file.tsv"
 }
 
 # imports -----------------------------------------------------------------
@@ -102,9 +102,11 @@ dplyr::full_join(x = offset_df,
 
 if (strandLess){
   group_vars = unique(input_ref_data$master_name)
-  offset_df_all$ctx = helperMut::simplify_ctx(as.character(offset_df_all$ctx),
-                                              simplify_set = ref_set)
-  offset_df_all %>% dplyr::group_by_at(c(group_vars,"ctx")) %>%
+  offset_df_all$ctx_simplified = helperMut::simplify_ctx(
+                                        as.character(offset_df_all$ctx),
+                                        simplify_set = ref_set)
+  offset_df_all %>%
+    dplyr::group_by_at(c(group_vars,"ctx_simplified")) %>%
     dplyr::summarise(ctx_counts_all = sum(ctx_counts)) -> offset_df_all_simp
 } else {
   ## This is only if strand is enforced

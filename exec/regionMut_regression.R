@@ -25,6 +25,16 @@ option_list = list(
               default = NULL,
               type='character',
               help="A mutation set to filter the input table. Use format TCW_T. Multiple sets can be included as comma separated argument TCW_T,NAT_T.[%default]"),
+  make_option(c("-p", "--prefix"),
+              action="store",
+              default = "output",
+              type='character',
+              help="Output prefix [default %default]"),
+  make_option(c("-f", "--folder"),
+              action="store",
+              default = ".",
+              type='character',
+              help="Output folder [default %default]"),
   make_option(c("-v", "--verbose"),
               action="store_true",
               default=FALSE,
@@ -43,6 +53,7 @@ if(interactive()){
 
 # imports -----------------------------------------------------------------
 
+library(regionMut)
 library(magrittr)
 
 # data --------------------------------------------------------------------
@@ -123,8 +134,12 @@ glm_nb_wrapper(data = dat,
                formula = formula_str,
                ci_method = ci_method,
                ci_parameters = ci_vars,
-               alpha = ci_alpha)
+               alpha = ci_alpha) -> test_coef
 
 # output ------------------------------------------------------------------
 
+fs::dir_create(opt$folder)
+opath = fs::path(opt$folder,
+                 glue::glue("{opt$prefix}_coef.tsv"))
+readr::write_tsv(x = test_coef,path = opath)
 
