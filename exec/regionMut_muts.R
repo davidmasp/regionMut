@@ -121,7 +121,6 @@ if (genome_sqls != reg_sqls){
 # mutation work -----------------------------------------------------------
 
 regions_grl = GRangesList(regions)
-sqlevels = seqlevels(regions_grl)
 
 ## assigning mutations
 ovr = findOverlaps(query = dat_vr,subject = regions_grl)
@@ -134,6 +133,9 @@ perc = scales::percent(el/ol)
 warning(glue::glue("{perc} of mutations found in regions"))
 
 ## also drop unused chr
+# I think the problem is when the chr are in the levels of regions but not
+# in the dat_vr ones. (long shot)
+sqlevels = intersect(seqlevels(regions_grl),seqlevels(dat_vr))
 dat_vr = keepSeqlevels(dat_vr,value = sqlevels)
 
 strand_ref_vec = unlist(lapply(regions_grl, function(x){
