@@ -121,13 +121,18 @@ if (genome_sqls != reg_sqls){
 # mutation work -----------------------------------------------------------
 
 regions_grl = GRangesList(regions)
+sqlevels = intersect(seqlevels(regions_grl),seqlevels(dat_vr))
+ol = length(dat_vr)
+dat_vr = dat_vr[seqnames(dat_vr) %in% sqlevels]
+el = length(dat_vr)
+scales::percent(el/ol)
 
 ## assigning mutations
 ovr = findOverlaps(query = dat_vr,subject = regions_grl)
 
 ## subset the mutations inside the regions
 ol = length(dat_vr)
-dat_vr = dat_vr[queryHits(ovr)]
+dat_vr = dat_vr[queryHits(ovr)] # [^932172]
 el = length(dat_vr)
 perc = scales::percent(el/ol)
 warning(glue::glue("{perc} of mutations found in regions"))
@@ -135,15 +140,13 @@ warning(glue::glue("{perc} of mutations found in regions"))
 ## also drop unused chr
 # I think the problem is when the chr are in the levels of regions but not
 # in the dat_vr ones. (long shot)
-sqlevels = intersect(seqlevels(regions_grl),seqlevels(dat_vr))
 dat_vr = keepSeqlevels(dat_vr,value = sqlevels)
 
 strand_ref_vec = unlist(lapply(regions_grl, function(x){
   unique(as.character(strand(x)))
   }))
 strand_reg = strand_ref_vec[subjectHits(ovr)]
-# I think this is not necessary
-dat_vr = dat_vr[queryHits(ovr)]
+## dat_vr is already ordered from [^932172]
 strand(dat_vr) = strand_reg
 
 ## obtain MS
@@ -158,8 +161,13 @@ rg_id = regions %>% purrr::map_df(function(x){
 
 stopifnot(all(rownames(rg_id) == as.integer(rg_id$id)))
 
+## when there's no mutations in a comb feature then it will not generate
+## the feature lvels which is good, however, it will generate NAs
+## downstream [^jhsaldgas]
 features_df = rg_id[subjectHits(ovr),]
 rownames(features_df) = NULL
+
+features_df$id = factor(features_df$id,levels = rg_id$id)
 
 MS = factor(MS,
             levels = helperMut::generate_mut_types(
@@ -172,6 +180,9 @@ table(MS,id = features_df$id) %>% as.data.frame() -> MS_df
 
 rg_id$id = factor(rg_id$id)
 dplyr::full_join(MS_df,rg_id) -> res_df
+
+## there were NAs coming from  [^jhsaldgas], should be solved but check?
+stopifnot(!any(is.na(res_df$MS)))
 
 # prepare refset
 ref_set = unlist(strsplit(opt$mutRef,split = ","))
@@ -244,3 +255,4 @@ opath = fs::path(opt$folder,
                  glue::glue("{opt$prefix}_counts.tsv"))
 readr::write_tsv(x = res_df_all_simp,
                  path = opath)
+
