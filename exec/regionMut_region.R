@@ -152,6 +152,9 @@ if (strandLess){
 
 # output ------------------------------------------------------------------
 
+## make sure folder exists
+fs::dir_create(opt$folder)
+
 saveRDS(object = regions,
         file = fs::path(opt$folder,glue::glue("{opt$prefix}_int_regions.rds")))
 
