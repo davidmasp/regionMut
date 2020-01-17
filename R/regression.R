@@ -31,7 +31,8 @@ glm_nb_wrapper <- function(data,
                            name = "Regression"){
   # needs to always return a dataFrame
 
-  try_catch_error_mssg = "no valid set of coefficients has been found: please supply starting values"
+  try_catch_error_mssg = c("no valid set of coefficients has been found: please supply starting values",
+                           "profiling has found a better solution, so original fit had not converged")
 
   stopifnot(is.numeric(alpha) && alpha < 1 )
 
@@ -77,7 +78,7 @@ glm_nb_wrapper <- function(data,
            }, error = function(err) {
              # this is not the ideal way to handle code but is there any
              # better?
-             if (err == try_catch_error_mssg){
+             if (err %in% try_catch_error_mssg){
                warning(glue::glue("{name} CI didn't work"))
                warning(err)
                CI_df = NULL
