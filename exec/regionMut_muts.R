@@ -195,9 +195,9 @@ if (strandLess){
   cnames = colnames(res_df)
   cnames = cnames[4:ncol(res_df)]
   group_vars = cnames
-  res_df$ms_simp = helperMut::simplify_muts(as.character(res_df$MS),
+  res_df$ms_simplified = helperMut::simplify_muts(as.character(res_df$MS),
                                               simplify_set = ref_set)
-  res_df %>% dplyr::group_by_at(c(group_vars,"ms_simp")) %>%
+  res_df %>% dplyr::group_by_at(c(group_vars,"ms_simplified")) %>%
     dplyr::summarise(ms_counts_all = sum(Freq)) -> res_df_all_simp
 } else{
   # with strand info
