@@ -133,7 +133,6 @@ if ("ci" %in% names(form_yml)){
 glm_nb_wrapper(data = dat,
                formula = formula_str,
                ci_method = ci_method,
-               ci_parameters = ci_vars,
                alpha = ci_alpha) -> test_coef
 
 # output ------------------------------------------------------------------

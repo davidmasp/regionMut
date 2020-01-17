@@ -31,6 +31,8 @@ glm_nb_wrapper <- function(data,
                            name = "Regression"){
   # needs to always return a dataFrame
 
+  try_catch_error_mssg = "no valid set of coefficients has been found: please supply starting values"
+
   stopifnot(is.numeric(alpha) && alpha < 1 )
 
   # defaults to profile
@@ -53,11 +55,7 @@ glm_nb_wrapper <- function(data,
     },finally = {})
 
   if (is.null(fit)){
-    fit_df = data.frame(term = ci_parameters,
-                        estimate = NA,
-                        std.error = NA,
-                        statistic = NA,
-                        p.value = NA)
+    fit_df =  NULL
 
     ci_method = "none"
   } else {
@@ -69,7 +67,6 @@ glm_nb_wrapper <- function(data,
            tryCatch({
 
              ci_obj = confint(fit,
-                              parm = ci_parameters,
                               level = (1 - alpha))
 
              ci_obj %>%
@@ -78,9 +75,15 @@ glm_nb_wrapper <- function(data,
                magrittr::set_colnames(c("term", "ci_low", "ci_high")) -> CI_df
 
            }, error = function(err) {
-             warning(glue::glue("{name} CI didn't work"))
-             warning(err)
-             CI_df = NULL
+             # this is not the ideal way to handle code but is there any
+             # better?
+             if (err == try_catch_error_mssg){
+               warning(glue::glue("{name} CI didn't work"))
+               warning(err)
+               CI_df = NULL
+             } else {
+               stop(err)
+             }
            },
            finally = {
            })
@@ -103,7 +106,7 @@ glm_nb_wrapper <- function(data,
     CI_df = NULL
   }
   if (is.null(CI_df)){
-    CI_df = data.frame(term = ci_parameters,
+    CI_df = data.frame(term = fit_df$term,
                        ci_low = NA,
                        ci_high = NA)
   }
