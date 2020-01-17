@@ -47,6 +47,11 @@ option_list = list(
               default = ".",
               type='character',
               help="Output folder [default %default]"),
+  make_option(c("-S", "--filterSet"),
+              action="store",
+              default = NULL,
+              type='character',
+              help="A mutation set to filter the input table. Use format TCW_T. Multiple sets can be included as colon separated argument TCW_T:NAT_T.[%default]"),
   make_option(c("-v", "--verbose"),
               action="store_true",
               default=FALSE,
@@ -251,6 +256,15 @@ if (strandLess){
 }
 
 res_df_all_simp$N_samples = N_samples
+
+
+# filter by mutation set --------------------------------------------------
+
+if (!is.null(opt$filterSet)){
+  set_input = unlist(strsplit(x = opt$filterSet, split = ":"))
+  mutSet = helperMut::make_set(set_input)
+  res_df_all_simp %<>% dplyr::filter(ms_simplified %in% mutSet)
+}
 
 # output ------------------------------------------------------------------
 

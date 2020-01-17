@@ -24,7 +24,7 @@ option_list = list(
               action="store",
               default = NULL,
               type='character',
-              help="A mutation set to filter the input table. Use format TCW_T. Multiple sets can be included as comma separated argument TCW_T,NAT_T.[%default]"),
+              help="A mutation set to filter the input table. Use format TCW_T. Multiple sets can be included as colon separated argument TCW_T:NAT_T.[%default]"),
   make_option(c("-p", "--prefix"),
               action="store",
               default = "output",
@@ -84,7 +84,7 @@ if(nrow(counts)> urow){
     )
 }
 
-dat = dplyr::inner_join(counts,
+dat = dplyr::left_join(counts,
                         offset,
                         by = c(group_vars,"ctx" = "ctx_simplified"))
 
@@ -93,8 +93,9 @@ dat$ln_at_risk = log(dat$N_samples * dat$ctx_counts_all)
 
 # filter by mutation set --------------------------------------------------
 
+# I think this won't be necessary now...
 if (!is.null(opt$filterSet)){
-  set_input = unlist(strsplit(x = opt$filterSet, split = ","))
+  set_input = unlist(strsplit(x = opt$filterSet, split = ":"))
   mutSet = helperMut::make_set(set_input)
   dat %<>% dplyr::filter(dat$ms_simplified %in% mutSet)
 }
