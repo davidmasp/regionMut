@@ -95,8 +95,10 @@ if (length(unique(sampleNames(dat_vr))) > 1){
   stop("Unisample vcf are required, remove sample info and add -N arg")
 }
 
-if (is.null(opt$N)){
+if (is.null(opt$nSamples)){
   N_samples = 1
+} else {
+  N_samples = opt$nSamples
 }
 
 regions = readRDS(opt$regions)
