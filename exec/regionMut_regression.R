@@ -45,10 +45,10 @@ opt = parse_args(OptionParser(option_list=option_list))
 options(verbose = opt$verbose)
 
 if(interactive()){
-  opt$offset = "output_offset.tsv"
-  opt$counts = "output_counts.tsv"
-  opt$formula = "inst/testdata/test.yml"
-  opt$filterSet = "TCW_T,NAT_T"
+  opt$offset = "inst/testdata/temp_files/output_offset.tsv"
+  opt$counts = "inst/testdata/temp_files/output_counts.tsv"
+  opt$formula = "inst/testdata/david_strand_formula.yml"
+  opt$filterSet = NULL
 }
 
 # imports -----------------------------------------------------------------
@@ -90,6 +90,8 @@ dat = dplyr::left_join(counts,
 
 dat$ln_at_risk = log(dat$N_samples * dat$ctx_counts_all)
 
+# remove impossble regions
+dat %<>% dplyr::filter(ctx_counts_all != 0)
 
 # filter by mutation set --------------------------------------------------
 
@@ -101,8 +103,6 @@ if (!is.null(opt$filterSet)){
 }
 
 # formula info --------------------------------------------------------------
-
-opt$formula
 
 form_yml = yaml::read_yaml(opt$formula)
 
@@ -123,11 +123,9 @@ for (i in names(form_yml$levels)){
 
 if ("ci" %in% names(form_yml)){
   ci_method = form_yml$ci$method
-  ci_vars = form_yml$ci$variables
   ci_alpha = form_yml$ci$alpha
 } else {
   ci_method = "profile"
-  ci_vars = group_vars
   ci_alpha = 0.05
 }
 

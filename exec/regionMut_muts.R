@@ -62,8 +62,9 @@ opt = parse_args(OptionParser(option_list=option_list))
 options(verbose = opt$verbose)
 
 if(interactive()){
-  opt$regions = "output_int_regions.rds"
-  opt$mutations = "inst/testdata/test_vcf.vcf"
+  opt$regions = "inst/testdata/temp_files/output_int_regions.rds"
+  opt$mutations = "inst/testdata/david_muts.vcf"
+  opt$folder = "inst/testdata/temp_files"
 }
 
 # imports -----------------------------------------------------------------

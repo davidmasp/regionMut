@@ -142,6 +142,7 @@ generate_test_regions2 <- function() {
 
 
   path = "inst/testdata/"
+  fs::dir_create(path)
 
   channel1 = GRanges(
     seqnames = "chr1",
@@ -203,6 +204,8 @@ generate_test_regions2 <- function() {
   table_tsv$file_name = fs::path(path,
           glue::glue("{table_tsv$master_name}_{table_tsv$bins}.bed"))
 
+  table_tsv = table_tsv[,c("master_name","bins","file_name","strand")]
+
   readr::write_tsv(x = table_tsv,path = fs::path(path,"channels_bins.tsv"))
 
 
@@ -214,8 +217,8 @@ generate_test_regions2 <- function() {
       start = c(25,75,125,175,225,275) + 1e6,
       width = 1
     ),
-    ref = "N", # they are used to check for indels only I think
-    alt = "H",
+    ref = c("A","G","C","G","G","T"),
+    alt = c("T","A","T","A","A","A"),
     sampleNames = "David"
   )
 
@@ -224,4 +227,5 @@ generate_test_regions2 <- function() {
   writeVcf(dat_vcf,filename = fs::path(path,"david_muts.vcf"))
 
 }
+
 

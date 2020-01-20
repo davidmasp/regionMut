@@ -1,0 +1,18 @@
+formula:
+  value: ms_counts_all
+  variables: Channel3
+  offset: TRUE
+
+levels:
+  Channel3:
+    - Channel3_S_ref
+    - Channel3_antiS_ref
+ci:
+  method: profile
+  alpha: 0.05
+
+## the strand is a bit complicated, you can use:
+## - {feature}_{binName}_ref
+## - {feature}_anti{binName}_ref
+
+## IMPLEMENT COMPARISIONS NEXT!

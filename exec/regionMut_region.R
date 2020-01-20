@@ -45,8 +45,8 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
-  opt$regions = "inst/testdata/test_bins.tsv"
-  #opt$regions = "input_bed_file.tsv"
+  opt$regions = "inst/testdata/channels_bins.tsv"
+  opt$folder = "inst/testdata/temp_files"
 }
 
 # imports -----------------------------------------------------------------
@@ -74,6 +74,15 @@ lor_input = read_input_regions(ref_data = input_ref_data)
 regions = process_region_interactions2(list_of_regions = lor_input)
 genome = helperMut::genome_selector(alias = opt$genome)
 
+## DROP UNUSED REGIONS?
+mask = lengths(regions) == 0
+warning(glue::glue("{sum(mask)} interactions from the {length(mask)} possible dropped due to lack of interaction"))
+regions[mask] = NULL
+
+names(regions) = purrr::map_chr(regions, function(x){
+  x$id %>% as.character()
+})
+
 # first we don't simplify the set because we may have strandness
 offset_df = get_offset(gr_list = regions,
                        k = opt$kmer,
@@ -86,7 +95,10 @@ stopifnot(length(ref_set) == 2)
 
 ## extract metadata from regions
 
-std_tmp = purrr::map_chr(regions,function(x){as.character(unique(strand(x)))})
+
+std_tmp = purrr::map_chr(regions,function(x){
+  as.character(unique(strand(x)))
+  })
 strandLess = all(unique(std_tmp) == "*") & (length(unique(std_tmp)) == 1)
 
 ## extract and join metadata which is stored in regions
@@ -113,7 +125,7 @@ if (strandLess){
   strand_mask = input_ref_data$strand == "*"
   group_vars = unique(input_ref_data[strand_mask,][["master_name"]])
   group_vars_std = unique(input_ref_data[!strand_mask,][["master_name"]])
-  print("Strand mode in")
+  message("Strand mode in")
   stopifnot(length(group_vars_std) == 1)
 
   offset_df_all[[group_vars_std]] %>%
