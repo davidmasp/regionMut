@@ -137,12 +137,6 @@ if (strandLess){
   feat_group = unique(feat_group)
   stopifnot(length(feat_group) == 1)
 
-  offset_df_all$ctx_strand_switched = ifelse(
-    std_group == "minus",
-    helperMut::str_reverse_complement(offset_df_all$ctx),
-    as.character(offset_df_all$ctx)
-  )
-
   offset_df_all$ctx_simplified =
     helperMut::simplify_ctx(ctx = as.character(offset_df_all$ctx),
                             simplify_set = ref_set)
@@ -154,7 +148,7 @@ if (strandLess){
   k = (K-1)/2
 
   offset_df_all[[group_vars_std]] = ifelse(
-    substr(x = offset_df_all$ctx_strand_switched, k + 1, k + 1) %in% ref_set,
+    substr(x = offset_df_all$ctx, k + 1, k + 1) %in% ref_set,
     feat_name_true,
     feat_name_false
   )

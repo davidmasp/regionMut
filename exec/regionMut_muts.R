@@ -231,12 +231,6 @@ if (strandLess){
   feat_group = unique(feat_group)
   stopifnot(length(feat_group) == 1)
 
-  res_df$ms_strand_switched = ifelse(
-    std_group == "minus",
-    helperMut::ms_reverse_complement(as.character(res_df$MS)),
-    as.character(res_df$MS)
-  )
-
   res_df$ms_simplified =
     helperMut::simplify_muts(muts = as.character(res_df$MS),
                              simplify_set = ref_set)
@@ -246,7 +240,7 @@ if (strandLess){
   k = opt$kmer
 
   res_df[[group_vars_std]] = ifelse(
-    substr(x = res_df$ms_strand_switched, k + 1, k + 1) %in% ref_set,
+    substr(x = res_df$MS, k + 1, k + 1) %in% ref_set,
     feat_name_true,
     feat_name_false
   )
