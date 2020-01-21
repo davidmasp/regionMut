@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.1
-##fileDate=20200115
+##fileDate=20200121
 ##phasing=unphased
 ##source=VariantAnnotation 1.30.1
 ##FORMAT=<ID=AD,Number=2,Type=Integer,Description="Allelic depths (number of reads in each observed allele)">

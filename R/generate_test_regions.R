@@ -20,14 +20,14 @@ generate_test_regions <- function() {
   library(GenomicRanges)
   library(magrittr)
 
-  g = helperMut::genome_selector()
+  g = helperMut::genome_selector(alias = "Hsapiens.UCSC.hg19")
   rg = helperMut::get_region_chunks(gr = g,wl = 1000000,unlist = TRUE)
   rg2 = helperMut::get_region_chunks(gr = g,wl = 505002,unlist = TRUE)
   rg3 = helperMut::get_region_chunks(gr = g,wl = 696165 ,unlist = TRUE)
 
-  rg = rg[seqnames(rg) %in% c("chr1","chr2")]
-  rg2 = rg2[seqnames(rg2) %in% c("chr1","chr2")]
-  rg3 = rg3[seqnames(rg3) %in% c("chr1","chr2")]
+  rg = rg[as.character(seqnames(rg)) %in% c("chr1","chr2")]
+  rg2 = rg2[as.character(seqnames(rg2)) %in% c("chr1","chr2")]
+  rg3 = rg3[as.character(seqnames(rg3)) %in% c("chr1","chr2")]
 
   mcols(rg)$bin = sample(x = letters[1:3],size = length(rg),replace = TRUE)
   mcols(rg2)$bin = sample(x = LETTERS[11:13],size = length(rg2),replace = TRUE)

@@ -1,7 +1,7 @@
 formula:
   value: ms_counts_all
   variables: Channel3
-  offset: TRUE
+  offset: FALSE
 
 levels:
   Channel3:
