@@ -46,6 +46,7 @@ opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
   opt$regions = "inst/testdata/channels_bins.tsv"
+  opt$regions = "rpTime_rpStrand.tsv"
   opt$folder = "inst/testdata/temp_files"
 }
 
@@ -80,7 +81,7 @@ warning(glue::glue("{sum(mask)} interactions from the {length(mask)} possible dr
 regions[mask] = NULL
 
 names(regions) = purrr::map_chr(regions, function(x){
-  x$id %>% as.character()
+  unique(as.character(x$id))
 })
 
 # first we don't simplify the set because we may have strandness
