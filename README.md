@@ -5,11 +5,12 @@
 
 <!-- badges: start -->
 
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
-[![](https://img.shields.io/twitter/url/https/twitter.com/davidmasp.svg?label=Follow&style=social)](https://twitter.com/davidmasp)
 [![Build
 Status](https://travis-ci.com/davidmasp/regionMut.svg?token=8QucVjrW7PEstyRg4eFq&branch=develop)](https://travis-ci.com/davidmasp/regionMut)
+[![Codecov test
+coverage](https://codecov.io/gh/davidmasp/regionMut/branch/master/graph/badge.svg)](https://codecov.io/gh/davidmasp/regionMut?branch=master)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 The goal of regionMut is to perform an statistical analysis of mutation
