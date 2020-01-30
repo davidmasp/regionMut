@@ -5,18 +5,21 @@
 
 <!-- badges: start -->
 
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
-[![](https://img.shields.io/twitter/url/https/twitter.com/davidmasp.svg?label=Follow&style=social)](https://twitter.com/davidmasp)
 [![Build
 Status](https://travis-ci.com/davidmasp/regionMut.svg?token=8QucVjrW7PEstyRg4eFq&branch=develop)](https://travis-ci.com/davidmasp/regionMut)
+[![Codecov test
+coverage](https://codecov.io/gh/davidmasp/regionMut/branch/master/graph/badge.svg)](https://codecov.io/gh/davidmasp/regionMut?branch=master)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 The goal of regionMut is to perform an statistical analysis of mutation
-enrichment in regions of interest such as genes. Regions will be
-represented in channels of bed files.
-
-Strand regions can be used only once.
+enrichment in regions of interest such as genes/promoters/epigenetic
+bins. Regions will be represented in channels of bed files. Multiple
+channels can be inputed together. This will effectively control for
+different channels. Region channels with strand specification can be
+used only once, as a possible clash in the strand definition can be
+problematic.
 
 ## Installation
 
@@ -60,9 +63,9 @@ the executable as stand alone and place it somewhere in your path. This
 last option is exemplified here:
 
     cd somewhere/in/your/PATH
-    URL=""
+    URL="https://raw.githubusercontent.com/davidmasp/regionMut/develop/regionmut"
     wget ${URL}
-    
+    cd ~
     # test
     regionmut region -h
 
@@ -129,15 +132,48 @@ in the analysis.
     
     ## IMPLEMENT COMPARISIONS NEXT!
 
+  - A **vcf file** which will be considered unisample, meaning, that all
+    positions will be evauated together. If more than one sample are
+    comprised in the given vcf, you should modify the `-N` argument.
+    Note: It is important that for a somatic mutations vcf, the Normal
+    sample is removed from the vcf file.
+
 ### Arguments
 
-to fill
+The **region mode** takes channels of regions and obtains all the
+possible intersections and the nucleotide context from each
+intersection.
 
-### Example
+| flag | Long flag   | Description                                                                                                                                                             |
+| ---- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-b` | `--regions` | Input regions table, with name, channel, bed file and strand. See [this as example](inst/testdata/channels_bins.tsv)                                                    |
+| `-k` | `--kmer`    | Length of the kmer sequence to analyse. The k represents the extension to each site from the central mutated base, note that it’s not the width of the oligonucleotide. |
 
-This is a basic example which shows you how to solve a common problem:
+The **muts mode** aggregates mutation files in previously defined region
+intersections.
 
-``` r
-# library(regionMut)
-## basic example code
-```
+| flag | Long flag     | Description                                                                                              |
+| ---- | ------------- | -------------------------------------------------------------------------------------------------------- |
+| `-m` | `--mutations` | A uni-sample VCF with mutations. If multiple samples are represented in the vcf, modify the -N argument. |
+| `-r` | `--regions`   | List of regions coming from region sub-command \[default NULL\]                                          |
+| `-N` | `--nSamples`  | Number of samples, if null, \# of samples in the vcf \[default NULL\]                                    |
+
+The **regression mode** performs the negative binomial regression step
+with the data availabl from the muts step.
+
+| flag | Long flag     | Description                                                                                             |
+| ---- | ------------- | ------------------------------------------------------------------------------------------------------- |
+| `-c` | `--counts`    | A counts file coming from the regionmut muts step                                                       |
+| `-o` | `--offset`    | A offset counts file coming from the regionmut region step                                              |
+| `-F` | `--formula`   | Formula specification from a yaml file                                                                  |
+| `-S` | `--filterSet` | A IUPAC mutation set (such as TCW\>K) which will select the mutations of interest from the counts file. |
+
+Some arguments are **common** from all the regionmut modes:
+
+| flag | Long flag   | Description                                          |
+| ---- | ----------- | ---------------------------------------------------- |
+| `-g` | `--genome`  | A genome alias valid for helperMut::genome\_selector |
+| `-r` | `--mutRef`  | Reference bases, comma separated set \[default C,A\] |
+| `-p` | `--prefix`  | Output prefix \[default output\]                     |
+| `-f` | `--folder`  | Output folder \[default .\]                          |
+| `-v` | `--verbose` | verbosity \[default TRUE\]                           |
