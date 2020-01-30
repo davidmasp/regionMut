@@ -26,5 +26,6 @@ Imports:
     yaml,
     MASS,
     fs,
-    stringr
+    stringr,
+    BSgenome.Hsapiens.UCSC.hg19
 Remotes: davidmasp/helperMut
