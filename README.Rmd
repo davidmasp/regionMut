@@ -22,10 +22,11 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 The goal of regionMut is to perform an statistical analysis of mutation
-enrichment in regions of interest such as genes. Regions will be represented
-in channels of bed files.
-
-Strand regions can be used only once.
+enrichment in regions of interest such as genes/promoters/epigenetic bins.
+Regions will be represented in channels of bed files. Multiple channels can 
+be inputed together. This will effectively control for different channels.
+Region channels with strand specification can be used only once, as a
+possible clash in the strand definition can be problematic.
 
 ## Installation
 
