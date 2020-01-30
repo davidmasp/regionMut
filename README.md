@@ -132,7 +132,43 @@ in the analysis.
 
 ### Arguments
 
-to fill
+The **region mode** takes channels of regions and obtains all the
+possible intersections and the nucleotide context from each
+intersection.
+
+| flag | Long flag   | Description                                                                                                                                                             |
+| ---- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-b` | `--regions` | Input regions table, with name, channel, bed file and strand. See [this as example](inst/testdata/channels_bins.tsv)                                                    |
+| `-k` | `--kmer`    | Length of the kmer sequence to analyse. The k represents the extension to each site from the central mutated base, note that it’s not the width of the oligonucleotide. |
+
+The **muts mode** aggregates mutation files in previously defined region
+intersections.
+
+| flag | Long flag     | Description                                                                                              |
+| ---- | ------------- | -------------------------------------------------------------------------------------------------------- |
+| `-m` | `--mutations` | A uni-sample VCF with mutations. If multiple samples are represented in the vcf, modify the -N argument. |
+| `-r` | `--regions`   | List of regions coming from region sub-command \[default NULL\]                                          |
+| `-N` | `--nSamples`  | Number of samples, if null, \# of samples in the vcf \[default NULL\]                                    |
+
+The **regression mode** performs the negative binomial regression step
+with the data availabl from the muts step.
+
+| flag | Long flag     | Description                                                                                             |
+| ---- | ------------- | ------------------------------------------------------------------------------------------------------- |
+| `-c` | `--counts`    | A counts file coming from the regionmut muts step                                                       |
+| `-o` | `--offset`    | A offset counts file coming from the regionmut region step                                              |
+| `-F` | `--formula`   | Formula specification from a yaml file                                                                  |
+| `-S` | `--filterSet` | A IUPAC mutation set (such as TCW\>K) which will select the mutations of interest from the counts file. |
+
+Some arguments are **common** from all the regionmut modes:
+
+| flag | Long flag   | Description                                          |
+| ---- | ----------- | ---------------------------------------------------- |
+| `-g` | `--genome`  | A genome alias valid for helperMut::genome\_selector |
+| `-r` | `--mutRef`  | Reference bases, comma separated set \[default C,A\] |
+| `-p` | `--prefix`  | Output prefix \[default output\]                     |
+| `-f` | `--folder`  | Output folder \[default .\]                          |
+| `-v` | `--verbose` | verbosity \[default TRUE\]                           |
 
 ### Example
 
