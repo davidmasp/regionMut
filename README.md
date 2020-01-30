@@ -130,6 +130,12 @@ in the analysis.
     
     ## IMPLEMENT COMPARISIONS NEXT!
 
+  - A **vcf file** which will be considered unisample, meaning, that all
+    positions will be evauated together. If more than one sample are
+    comprised in the given vcf, you should modify the `-N` argument.
+    Note: It is important that for a somatic mutations vcf, the Normal
+    sample is removed from the vcf file.
+
 ### Arguments
 
 The **region mode** takes channels of regions and obtains all the
@@ -169,12 +175,3 @@ Some arguments are **common** from all the regionmut modes:
 | `-p` | `--prefix`  | Output prefix \[default output\]                     |
 | `-f` | `--folder`  | Output folder \[default .\]                          |
 | `-v` | `--verbose` | verbosity \[default TRUE\]                           |
-
-### Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-# library(regionMut)
-## basic example code
-```
