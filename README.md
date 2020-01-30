@@ -61,9 +61,9 @@ the executable as stand alone and place it somewhere in your path. This
 last option is exemplified here:
 
     cd somewhere/in/your/PATH
-    URL=""
+    URL="https://raw.githubusercontent.com/davidmasp/regionMut/develop/regionmut"
     wget ${URL}
-    
+    cd ~
     # test
     regionmut region -h
 
