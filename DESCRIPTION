@@ -28,4 +28,4 @@ Imports:
     fs,
     stringr,
     BSgenome.Hsapiens.UCSC.hg19
-Remotes: davidmasp/helperMut
+Remotes: davidmasp/helperMut@c4facfc721403808206af780096900fe2412068a
