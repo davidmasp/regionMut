@@ -21,6 +21,10 @@ different channels. Region channels with strand specification can be
 used only once, as a possible clash in the strand definition can be
 problematic.
 
+The concept behing regionMut can be exemplified here:
+
+![](regionMut_concept.png)
+
 ## Installation
 
 The installation process is divided in the R package which basically
