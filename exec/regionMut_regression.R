@@ -106,6 +106,23 @@ if (!is.null(opt$filterSet)){
 
 form_yml = yaml::read_yaml(opt$formula)
 
+
+## fix plus signs in the levels
+## I think this should be enforced outside the package because it can
+## bring problems I think at some point
+subs_plus_sign <- function(text) {
+  stringr::str_replace_all(
+    pattern = "(?<![:blank:])[+](?![:blank:])",
+    replacement = ".",
+    string = text)
+}
+if (any(grepl(names(form_yml$levels),pattern = "[+]"))){
+  form_yml$formula$variables = subs_plus_sign(form_yml$formula$variables )
+  names(form_yml$levels) = subs_plus_sign(names(form_yml$levels))
+  colnames(dat) = subs_plus_sign(colnames(dat))
+}
+
+
 value = form_yml$formula$value
 variables = form_yml$formula$variables
 use_offset = form_yml$formula$offset
