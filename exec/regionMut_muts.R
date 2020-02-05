@@ -163,9 +163,16 @@ MS = helperMut::get_MS_VR(x = dat_vr,
                      genome = genome,
                      keep_strand = TRUE)
 
-rg_id = regions %>% purrr::map_df(function(x){
-  dplyr::distinct(as.data.frame(mcols(x)))
-})
+purrr::map_df(regions,function(x){
+  df = dplyr::distinct(as.data.frame(mcols(x)))
+  ## there is an issue with names that have special characters such as +
+  ## when they are transformed to data.frame, the character goes to . and
+  ## then it becomes problematic
+  if (any(colnames(df) != colnames(mcols(x)))){
+    colnames(df) = colnames(mcols(x))
+  }
+  df
+}) -> rg_id
 
 stopifnot(all(rownames(rg_id) == as.integer(rg_id$id)))
 
