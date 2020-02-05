@@ -104,7 +104,14 @@ strandLess = all(unique(std_tmp) == "*") & (length(unique(std_tmp)) == 1)
 
 ## extract and join metadata which is stored in regions
 purrr::map_df(regions,function(x){
-  dplyr::distinct(as.data.frame(mcols(x)))
+  df = dplyr::distinct(as.data.frame(mcols(x)))
+  ## there is an issue with names that have special characters such as +
+  ## when they are transformed to data.frame, the character goes to . and
+  ## then it becomes problematic
+  if (any(colnames(df) != colnames(mcols(x)))){
+    colnames(df) = colnames(mcols(x))
+  }
+  df
 }) -> r_ids
 
 r_ids$id  = as.character( r_ids$id )

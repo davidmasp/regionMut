@@ -38,6 +38,8 @@ read_input_regions <- function(ref_data) {
         purrr::map(rtracklayer::import.bed) %>%
         purrr::map2(x$strand,
                     function(x,st){
+                      # this is for exported beds from rtracklayer?
+                      mcols(x)= NULL
                       strand(x) = st
                       x
                     })
@@ -65,7 +67,6 @@ read_input_regions <- function(ref_data) {
 #'
 #' # no run
 process_region_interactions2 <- function(list_of_regions){
-
     # this are all the bins in each region channel
     bins_per_feature = purrr::map(list_of_regions,names)
     comb = expand.grid(bins_per_feature)
@@ -106,7 +107,13 @@ process_region_interactions2 <- function(list_of_regions){
         return(GRanges())
       } else{
         MCOLS = mcols(intersect_regions)
-        MCOLS = cbind(MCOLS,comb[i,])
+        comb$id = i
+
+        if (ncol(comb) == 1){
+          MCOLS[[colnames(comb)]] = comb[i,]
+        } else {
+          MCOLS = cbind(MCOLS,comb[i,])
+        }
         MCOLS$id = i
         mcols(intersect_regions) = MCOLS
         return(intersect_regions)
