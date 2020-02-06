@@ -45,8 +45,7 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
-  opt$regions = "inst/testdata/channels_bins.tsv"
-  opt$regions = "rpTime_rpStrand.tsv"
+  opt$regions = "inst/testdata/test_bins_nostrand.tsv"
   opt$folder = "inst/testdata/temp_files"
 }
 
