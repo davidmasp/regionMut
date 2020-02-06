@@ -2,9 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-
 # intermediate tmp files
 output_*
-
 # readme byproducts
 README.html
+rpTime2_Bailey_Cell_CancerGenesLUAD_offset.tsv
+tmp/
