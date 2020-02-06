@@ -47,7 +47,7 @@ options(verbose = opt$verbose)
 if(interactive()){
   opt$offset = "inst/testdata/temp_files/output_offset.tsv"
   opt$counts = "inst/testdata/temp_files/output_counts.tsv"
-  opt$formula = "inst/testdata/david_strand_formula.yml"
+  opt$formula = "inst/testdata/test.yml"
   opt$filterSet = NULL
 }
 
@@ -105,6 +105,20 @@ if (!is.null(opt$filterSet)){
 # formula info --------------------------------------------------------------
 
 form_yml = yaml::read_yaml(opt$formula)
+
+
+## recode variables
+
+# the idea behind this feature is that you can recode the labels.
+# this will mantain the offset independently while combining the
+# effect sizes
+if ("recode_levels" %in% names(form_yml)) {
+  for (i in names(form_yml$recode_levels)){
+    recode_str = regionmut_unlist(form_yml$recode_levels[[i]])
+    dat[[i]] = forcats::fct_recode(.f = dat[[i]],
+                                   !!!recode_str)
+  }
+}
 
 
 ## fix plus signs in the levels

@@ -3,6 +3,13 @@ formula:
   variables: bed1 + bed2 + bed3
   offset: TRUE
 
+# (optional)
+recode_levels:
+  bed2:
+    LM:
+      - M
+      - L
+
 levels:
   bed1:
     - a
@@ -10,8 +17,7 @@ levels:
     - c
   bed2:
     - K
-    - L
-    - M
+    - LM
   bed3:
     - bed3_S_ref
     - bed3_antiS_ref

@@ -28,5 +28,6 @@ Imports:
     fs,
     stringr,
     BSgenome.Hsapiens.UCSC.hg19,
-    remotes
+    remotes,
+    forcats
 Remotes: davidmasp/helperMut@c4facfc721403808206af780096900fe2412068a
