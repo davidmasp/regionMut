@@ -174,7 +174,12 @@ purrr::map_df(regions,function(x){
   df
 }) -> rg_id
 
-stopifnot(all(rownames(rg_id) == as.integer(rg_id$id)))
+
+# I think it was wrong before.
+#
+# This test should make sense so the id matches the name of the region
+# in the Granges List (for the overlap to happen correctly).
+stopifnot(all(names(regions_grl) == as.integer(rg_id$id)))
 
 ## when there's no mutations in a comb feature then it will not generate
 ## the feature lvels which is good, however, it will generate NAs
