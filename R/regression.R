@@ -69,7 +69,8 @@ glm_nb_wrapper <- function(data,
 
   switch(ci_method,
          profile = {
-           tryCatch({
+
+           CI_df = tryCatch({
 
              ci_obj = confint(fit,
                               level = (1 - alpha))
@@ -77,16 +78,16 @@ glm_nb_wrapper <- function(data,
              ci_obj %>%
                as.data.frame() %>%
                tibble::rownames_to_column("term") %>%
-               magrittr::set_colnames(c("term", "ci_low", "ci_high")) -> CI_df
-
+               magrittr::set_colnames(c("term", "ci_low", "ci_high"))
            }, error = function(err) {
              # this is not the ideal way to handle code but is there any
              # better?
              if (err %in% try_catch_error_mssg){
+               #browser()
                warning(glue::glue("{name} CI didn't work"))
                warning(err)
                # here is when fit works and Ci does not.
-               CI_df = data.frame(term = fit_df$term,
+               data.frame(term = fit_df$term,
                                     ci_low = NA,
                                     ci_high = NA)
              } else {
