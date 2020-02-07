@@ -37,7 +37,7 @@ option_list = list(
               help="Output folder [default %default]"),
   make_option(c("-i", "--maxit"),
               action="store",
-              default = 200,
+              default = 50,
               type='integer',
               help="Max iterations (see glm.control) [default %default]"),
   make_option(c("-t", "--trace"),
