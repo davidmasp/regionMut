@@ -35,6 +35,15 @@ option_list = list(
               default = ".",
               type='character',
               help="Output folder [default %default]"),
+  make_option(c("-i", "--maxit"),
+              action="store",
+              default = 50,
+              type='integer',
+              help="Max iterations (see glm.control) [default %default]"),
+  make_option(c("-t", "--trace"),
+              action="store_true",
+              default=FALSE,
+              help="Whether to trace the regression (see glm.control) [default %default]"),
   make_option(c("-v", "--verbose"),
               action="store_true",
               default=FALSE,
@@ -49,6 +58,9 @@ if(interactive()){
   opt$counts = "inst/testdata/temp_files/output_counts.tsv"
   opt$formula = "inst/testdata/test.yml"
   opt$filterSet = NULL
+
+  opt$trace = TRUE
+  opt$maxit = 50
 }
 
 # imports -----------------------------------------------------------------
@@ -106,7 +118,6 @@ if (!is.null(opt$filterSet)){
 
 form_yml = yaml::read_yaml(opt$formula)
 
-
 ## recode variables
 
 # the idea behind this feature is that you can recode the labels.
@@ -160,9 +171,14 @@ if ("ci" %in% names(form_yml)){
   ci_alpha = 0.05
 }
 
+control_opt = glm.control(maxit = opt$maxit,
+                          trace = opt$trace)
+
+
 glm_nb_wrapper(data = dat,
                formula = formula_str,
                ci_method = ci_method,
+               control = control_opt,
                alpha = ci_alpha) -> test_coef
 
 # output ------------------------------------------------------------------
