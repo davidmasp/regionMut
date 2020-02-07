@@ -56,7 +56,11 @@ glm_nb_wrapper <- function(data,
     },finally = {})
 
   if (is.null(fit)){
-    fit_df =  NULL
+    fit_df =  data.frame(term = NA,
+                         estimate = NA,
+                         std.error = NA,
+                         statistic = NA,
+                         p.value = NA)
 
     ci_method = "none"
   } else {
@@ -81,7 +85,10 @@ glm_nb_wrapper <- function(data,
              if (err %in% try_catch_error_mssg){
                warning(glue::glue("{name} CI didn't work"))
                warning(err)
-               CI_df = NULL
+               # here is when fit works and Ci does not.
+               CI_df = data.frame(term = fit_df$term,
+                                    ci_low = NA,
+                                    ci_high = NA)
              } else {
                stop(err)
              }
@@ -99,18 +106,10 @@ glm_nb_wrapper <- function(data,
              dplyr::select(term, ci_low, ci_high) -> CI_df # rather stupid
          },
          none = {
-           CI_df = NULL
+           CI_df = data.frame(term = NA,
+                              ci_low = NA,
+                              ci_high = NA)
          })
-
-  if (! "CI_df" %in% ls(envir = environment())){
-    # this is really weird.. no idea why is this happening...
-    CI_df = NULL
-  }
-  if (is.null(CI_df)){
-    CI_df = data.frame(term = fit_df$term,
-                       ci_low = NA,
-                       ci_high = NA)
-  }
 
   result_df = dplyr::left_join(fit_df,CI_df,by = "term")
   result_df
