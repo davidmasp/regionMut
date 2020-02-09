@@ -44,6 +44,10 @@ option_list = list(
               action="store_true",
               default=FALSE,
               help="Whether to trace the regression (see glm.control) [default %default]"),
+    make_option(c("-F", "--force"),
+              action="store_true",
+              default=FALSE,
+              help="Save coeficients even if regression did not converge[default %default]"),
   make_option(c("-v", "--verbose"),
               action="store_true",
               default=FALSE,
@@ -183,19 +187,23 @@ glm_nb_wrapper(data = dat,
 
 # output ------------------------------------------------------------------
 
-fs::dir_create(opt$folder)
-opath = fs::path(opt$folder,
-                 glue::glue("{opt$prefix}_coef.tsv"))
-readr::write_tsv(x = test_coef,path = opath)
-
 
 # test if test_coef has NAs in it, if yes, return especial 
 # error code (123) as it is because the regression failed.
 # it will still generate the file, I am not sure how nxf
 # will be able to handle this...
 
-if(any(is.na(test_coef$estimate))){
+failed_regression = any(is.na(test_coef$estimate)) | 
+                    any(is.na(test_coef$ci_low))
+
+if(failed_regression & !opt$force){
   quit(save = "no",
        status = 123,
        runLast = FALSE)
+} else {
+  fs::dir_create(opt$folder)
+  opath = fs::path(opt$folder,
+                 glue::glue("{opt$prefix}_coef.tsv"))
+  readr::write_tsv(x = test_coef,path = opath)
 }
+
