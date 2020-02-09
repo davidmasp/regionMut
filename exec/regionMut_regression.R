@@ -188,3 +188,14 @@ opath = fs::path(opt$folder,
                  glue::glue("{opt$prefix}_coef.tsv"))
 readr::write_tsv(x = test_coef,path = opath)
 
+
+# test if test_coef has NAs in it, if yes, return especial 
+# error code (123) as it is because the regression failed.
+# it will still generate the file, I am not sure how nxf
+# will be able to handle this...
+
+if(any(is.na(test_coef$estimate))){
+  quit(save = "no",
+       status = 123,
+       runLast = FALSE)
+}
