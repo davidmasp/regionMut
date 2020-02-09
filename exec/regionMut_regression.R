@@ -44,7 +44,7 @@ option_list = list(
               action="store_true",
               default=FALSE,
               help="Whether to trace the regression (see glm.control) [default %default]"),
-    make_option(c("-F", "--force"),
+    make_option(c("-a", "--force"),
               action="store_true",
               default=FALSE,
               help="Save coeficients even if regression did not converge[default %default]"),
