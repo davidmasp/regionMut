@@ -32,7 +32,8 @@ glm_nb_wrapper <- function(data,
   # needs to always return a dataFrame
 
   try_catch_error_mssg = c("no valid set of coefficients has been found: please supply starting values",
-                           "profiling has found a better solution, so original fit had not converged")
+                           "profiling has found a better solution, so original fit had not converged",
+                           "NA/NaN/Inf in 'x'")
 
   stopifnot(is.numeric(alpha) && alpha < 1 )
 
@@ -82,7 +83,7 @@ glm_nb_wrapper <- function(data,
            }, error = function(err) {
              # this is not the ideal way to handle code but is there any
              # better?
-             if (err %in% try_catch_error_mssg){
+             if (err$message %in% try_catch_error_mssg){
                #browser()
                warning(glue::glue("{name} CI didn't work"))
                warning(err)
