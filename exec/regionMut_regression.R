@@ -25,6 +25,11 @@ option_list = list(
               default = NULL,
               type='character',
               help="A mutation set to filter the input table. Use format TCW_T. Multiple sets can be included as colon separated argument TCW_T:NAT_T.[%default]"),
+  make_option(c("-P", "--percentage"),
+              action="store",
+              default = NULL,
+              type='double',
+              help="A cumulative mutation limit. Mutations types which together do not accumulate this percentatge will be filtered out. This avoids creating false depletions.[%default]"),
   make_option(c("-p", "--prefix"),
               action="store",
               default = "output",
@@ -103,6 +108,42 @@ if(nrow(counts)> urow){
 dat = dplyr::left_join(counts,
                         offset,
                         by = c(group_vars,"ctx" = "ctx_simplified"))
+
+
+### this is a step to use when we have some sort of preselection in the
+### mutations inputed but you don't want to explicitly say it.
+### Thus what we do is to restrict the mutation set to mutation types
+### that comprise at least x% of all mutations in the table.
+
+if (!is.null(opt$percentage)){
+
+  ## I am not sure how this will behave if we have strands. I hope it's okay...
+  dat %>%
+    dplyr::group_by(ms_simplified) %>%
+    dplyr::summarise(total_counts = sum(ms_counts_all)) %>%
+    dplyr::arrange(-total_counts) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(c_total = cumsum(total_counts),
+                  perc = c_total / sum(total_counts)) %>%
+    dplyr::filter(perc < opt$percentage ) %>%
+    dplyr::pull(ms_simplified) -> selected_ms_types
+
+  mssg_txt = selected_ms_types %>%
+    glue::glue_collapse(sep = ", ",last = " and ")
+
+  el = sum(dat$ms_counts_all)
+  dat %<>% dplyr::filter(ms_simplified %in% selected_ms_types)
+  ol = sum(dat$ms_counts_all)
+
+  perc_str = scales::percent(ol/el)
+
+  warning(glue::glue(
+    "Percentage option selected, MS types included are {mssg_txt}. Total of {perc_str} remaining."
+  ))
+
+}
+
+
 
 dat$ln_at_risk = log(dat$N_samples * dat$ctx_counts_all)
 
@@ -188,12 +229,12 @@ glm_nb_wrapper(data = dat,
 # output ------------------------------------------------------------------
 
 
-# test if test_coef has NAs in it, if yes, return especial 
+# test if test_coef has NAs in it, if yes, return especial
 # error code (123) as it is because the regression failed.
 # it will still generate the file, I am not sure how nxf
 # will be able to handle this...
 
-failed_regression = any(is.na(test_coef$estimate)) | 
+failed_regression = any(is.na(test_coef$estimate)) |
                     any(is.na(test_coef$ci_low))
 
 if(failed_regression & !opt$force){
