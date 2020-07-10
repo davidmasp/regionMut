@@ -29,5 +29,6 @@ Imports:
     stringr,
     BSgenome.Hsapiens.UCSC.hg19,
     remotes,
-    forcats
+    forcats,
+    ggplot2
 Remotes: davidmasp/helperMut@c4facfc721403808206af780096900fe2412068a
