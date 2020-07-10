@@ -121,8 +121,9 @@ parallel_intersect <- function(gr_score,gr_mask){
   ## and removes the parts which are not in the
   ## gr_mask by parallel intersection
   ## Keeping original scores to the split ranges.
-  if (!any(seqnames(gr_score) %in% seqnames(gr_mask))){
-    stop("No shared seqnames")
+
+  if (!any(seqlevels(gr_score) %in% seqlevels(gr_mask))){
+    stop("No shared seqlevels")
   }
 
   mcols(gr_mask) = NULL
