@@ -29,7 +29,7 @@ option_list = list(
   make_option(c("-l", "--minValue"),
               action="store",
               default = 1,
-              type='integer',
+              type="double",
               help="Minimum value to consider in the signal distribution, values smaller to this parameter will be sent to bin 0 [default %default]."),
   make_option(c("-p", "--prefix"),
               action="store",
