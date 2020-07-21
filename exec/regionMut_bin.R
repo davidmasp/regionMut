@@ -144,6 +144,8 @@ if (opt$plot){
 binTypes = result_bins$bin_values
 results_split = split(x = result_bins, f = binTypes)
 
+lapply(results_split, reduce) -> results_split_reduced
+
 lapply(results_split, function(x){
   binName = as.character(unique(x$bin_values))
   oname = glue::glue("{opt$prefix}_{binName}_lowThr{opt$minValue}.bed.gz")
