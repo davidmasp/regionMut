@@ -144,7 +144,11 @@ if (opt$plot){
 binTypes = result_bins$bin_values
 results_split = split(x = result_bins, f = binTypes)
 
-lapply(results_split, reduce) -> results_split_reduced
+lapply(results_split, function(x) {
+  x_reduced = reduce(x)
+  mcols(x_reduced)$bin_values = unique(x$bin_values)
+  x_reduced
+} ) -> results_split_reduced
 
 lapply(results_split_reduced, function(x){
   binName = as.character(unique(x$bin_values))
