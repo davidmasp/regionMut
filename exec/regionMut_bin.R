@@ -146,7 +146,7 @@ results_split = split(x = result_bins, f = binTypes)
 
 lapply(results_split, reduce) -> results_split_reduced
 
-lapply(results_split, function(x){
+lapply(results_split_reduced, function(x){
   binName = as.character(unique(x$bin_values))
   oname = glue::glue("{opt$prefix}_{binName}_lowThr{opt$minValue}.bed.gz")
   opath = fs::path(opt$folder,oname)
