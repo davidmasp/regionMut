@@ -53,8 +53,9 @@ option_list = list(
 opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
-  opt$bigWig = "inst/testdata/wgEncodeUwRepliSeqBjWaveSignalRep1.bigWig"
-  opt$mask = "inst/testdata/genes.bed"
+  warning("interacion mode!")
+  opt$bigWig = "~/../Desktop/test_miguel/E114-DNase.fc.signal.bigwig"
+  opt$mask = "~/../Desktop/test_miguel/test_hg19_no_overlap.bed"
 }
 
 # imports -----------------------------------------------------------------
@@ -87,6 +88,8 @@ if (!is.null(opt$mask)){
 } else {
   dat_bw_new = dat_bw
 }
+# safer
+rm(dat_bw)
 
 
 binSignal_cumSum(gr = dat_bw_new,

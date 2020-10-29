@@ -7,7 +7,7 @@ binSignal_uniqueRes <- function(gr,
                                     n_bins = 4) {
 
   ## here I obtain the available resolutions of the original file.
-  params_resolutions = table(GenomicRanges::width(dat_bw))
+  params_resolutions = table(GenomicRanges::width(gr))
 
   # this tells us how minimun number of regions are we allow to drop if
   # they are not at the same res as the rest of the fail. If it is bigger
@@ -29,9 +29,9 @@ binSignal_uniqueRes <- function(gr,
   }
 
   # now we kill the wrong resolution
-  ol = length(dat_bw)
-  dat_bw = dat_bw[GenomicRanges::width(dat_bw) == params_res]
-  el = length(dat_bw)
+  ol = length(gr)
+  gr = gr[GenomicRanges::width(gr) == params_res]
+  el = length(gr)
   per = scales::percent(el/ol)
   message(glue::glue("After removing not uniform resolution values, {per} regions kept."))
 
@@ -43,29 +43,29 @@ binSignal_uniqueRes <- function(gr,
 
   # these are the bins which don't account for the minimum valkue, thus
   # they are sent to the bin 0! (aka baseline)
-  dat_bin0 = dat_bw[dat_bw$score <= params_min_value]
+  dat_bin0 = gr[gr$score <= params_min_value]
 
-  dat_bw_filt = dat_bw[dat_bw$score > params_min_value]
-  # dat_bw_filt$score %>% log %>% hist
+  gr_filt = gr[gr$score > params_min_value]
+  # gr_filt$score %>% log %>% hist
 
   ### STEP2
   # we order the bins according to their score
-  dat_bw_filt = dat_bw_filt[order(dat_bw_filt$score)]
+  gr_filt = gr_filt[order(gr_filt$score)]
 
   ### STEP3
   # then we bin the genome according to the argument number of bins/
   # because the resolution is shared they will have the same genome size.
   labels = glue::glue("eqFreqBin{seq_len(n_bins)}of{n_bins}")
-  bin_values = cut(seq_len(length(dat_bw_filt)),
+  bin_values = cut(seq_len(length(gr_filt)),
                    breaks = n_bins,
                    labels = labels)
 
-  dat_bw_filt$bins = bin_values
+  gr_filt$bins = bin_values
 
   ## Now I introduce the info in the 0 bins
   dat_bin0$bins = glue::glue("eqFreqBin0of{n_bins}")
 
-  dat_result = c(dat_bin0,dat_bw_filt)
+  dat_result = c(dat_bin0,gr_filt)
   dat_result = GenomicRanges::sort(dat_result)
   dat_result
 }
@@ -81,14 +81,14 @@ binSignal_cumSum <- function(gr,
 
   params_min_value = min_value
 
-  dat_bin0 = dat_bw[dat_bw$score <= params_min_value]
-  dat_bw_filt = dat_bw[dat_bw$score > params_min_value]
+  dat_bin0 = gr[gr$score <= params_min_value]
+  gr_filt = gr[gr$score > params_min_value]
 
-  dat_bw_filt = dat_bw_filt[order(dat_bw_filt$score)]
-  w_values = GenomicRanges::width(dat_bw_filt)
-  dat_bw_filt$cumWidth = cumsum(as.numeric(w_values))
+  gr_filt = gr_filt[order(gr_filt$score)]
+  w_values = GenomicRanges::width(gr_filt)
+  gr_filt$cumWidth = cumsum(as.numeric(w_values))
 
-  max_genone = dat_bw_filt[length(dat_bw_filt)]$cumWidth
+  max_genone = gr_filt[length(gr_filt)]$cumWidth
 
   # this generates equal sized bins from the minimum value to the maximum
   cut_points = seq(from = params_min_value,
@@ -98,15 +98,15 @@ binSignal_cumSum <- function(gr,
                    length.out = n_bins + 1)
 
   labels = glue::glue("eqFreqBin{seq_len(n_bins)}of{n_bins}")
-  bin_values = cut(dat_bw_filt$cumWidth,
+  bin_values = cut(gr_filt$cumWidth,
                    breaks = n_bins,
                    labels = labels)
 
-  dat_bw_filt$bin_values = bin_values
+  gr_filt$bin_values = bin_values
 
   dat_bin0$bin_values = glue::glue("eqFreqBin0of{n_bins}")
 
-  dat_result = c(dat_bin0,dat_bw_filt)
+  dat_result = c(dat_bin0,gr_filt)
   dat_result = GenomicRanges::sort(dat_result)
   dat_result
 
