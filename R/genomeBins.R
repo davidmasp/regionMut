@@ -104,9 +104,14 @@ binSignal_cumSum <- function(gr,
 
   gr_filt$bin_values = bin_values
 
-  dat_bin0$bin_values = glue::glue("eqFreqBin0of{n_bins}")
+  ## dat_bin0 is a gr object
+  if (length(dat_bin0) == 0){
+    dat_result = gr_filt
+  } else {
+    dat_bin0$bin_values = glue::glue("eqFreqBin0of{n_bins}")
+    dat_result = c(dat_bin0,gr_filt)
+  }
 
-  dat_result = c(dat_bin0,gr_filt)
   dat_result = GenomicRanges::sort(dat_result)
   dat_result
 

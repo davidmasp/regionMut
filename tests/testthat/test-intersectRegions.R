@@ -47,4 +47,15 @@ test_that("bins1",{
 
   expect_equal(total_s1,total_s2)
 
+
+  ## here I aim to fix a bug that crashed when the bin0 didn't exist.
+  ## Now I check if it does or not and then I remove it from the output
+  ## this tests this case and if successfully has removed the bin0 bin
+  binSignal_cumSum(gr = test_bw,
+                   min_value = 0,
+                   n_bins = 2) -> result_bins2
+  expect_equal(length(result_bins2),10)
+  expect_false(any(result_bins2$bin_values %in% "eqFreqBin0of2"))
+
+
 })
