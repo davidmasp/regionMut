@@ -12,7 +12,7 @@ option_list = list(
   make_option(c("-m", "--mutations"),
               action="store",
               type='character',
-              help="vcf file [default %default]"),
+              help="a vcf, vranges or tsv file [default %default]"),
   make_option(c("-r", "--regions"),
               action="store",
               type='character',
@@ -77,8 +77,15 @@ library(regionMut)
 
 # data --------------------------------------------------------------------
 
-dat_vcf = readVcf(opt$mutations)
-dat_vr = as(dat_vcf,"VRanges")
+## determine format from the extension
+
+extension = tools::file_ext(opt$mutations)
+if (extension == "rds"){
+  dat_vr = readRDS(opt$mutations)
+} else {
+  dat_vcf = readVcf(opt$mutations)
+  dat_vr = as(dat_vcf,"VRanges")
+}
 
 mcols(dat_vr) = NULL
 
@@ -97,8 +104,14 @@ if(any(grepl(pattern = "NORMAL",x = sampleNames(dat_vr)))){
   stop("You have a normal sample in your vcf")
 }
 
+
 if (length(unique(sampleNames(dat_vr))) > 1){
-  stop("Unisample vcf are required, remove sample info and add -N arg")
+  if (!is.null(opt$nSamples)){
+    warning("Input is not unisample, forcing because -N is set")
+    sampleNames(dat_vr) = as.character("UNISAMPLE")
+  } else {
+    stop("Unisample vcf are required, remove sample info and add -N arg")
+  }
 }
 
 if (is.null(opt$nSamples)){
