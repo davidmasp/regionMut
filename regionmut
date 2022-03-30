@@ -1,40 +1,88 @@
-#!/usr/bin/env bash
-set -o noglob
+#!/usr/bin/env python3
 
-# funs:
-check_errs()
-{
-  #1 is err code
-  #2 is the err mssg
-  if [ "${1}" -ne "0" ]; then
-    echo "ERROR # ${1} : ${2}"
-    # I think we have to put this here too as it will exit afterwards
-	set +o noglob
+import subprocess
+import re
+import os
+import tempfile
+import sys
 
-    exit ${1}
-  fi
-}
+def find_r_installed():
+    """
+    Find R installed.
+    """
+    outpt = subprocess.run(['which', 'Rscript'], check=True, capture_output=True)
+    path_to_r = outpt.stdout.decode("utf-8").strip()
+    return path_to_r
 
-arr=($*)
-echo "regionMut mode selected ${arr[0]}"
+def find_r_version(path_r):
+    """
+    Find which version has R installed
+    """
+    cmd = [path_r, '--version']
+    outpt = subprocess.run(cmd, check=True, capture_output=True)
+    version_out = outpt.stderr.decode("utf-8").strip()
+    vout = re.findall(r'(\d+\.\d+\.\d+)', version_out)[0]
+    return vout
+
+def find_r_lib(path_r):
+    """
+    pass
+    """
+
+def get_exec_path(script, pkg):
+    """
+    Get path to executable
+    """
+    pathR = find_r_installed()
+    r_shibang = "#!{}".format(pathR)
+    r_code = 'system.file("{}", package = "{}")'.format(script, pkg)
+    tmp_script = "\n".join([
+        r_shibang,
+        "",
+        r_code
+    ])
+    tmp_file = tempfile.NamedTemporaryFile(mode = "w", delete = False, dir = ".")
+    tmp_file.write(tmp_script)
+    tmp_file.close()
+    scrp_out = subprocess.run([pathR, tmp_file.name], check=True, capture_output=True)
+    os.remove(tmp_file.name)
+    tout = scrp_out.stdout.decode("utf-8").strip()
+    # from https://stackoverflow.com/a/9085630
+    pattern = r'"([A-Za-z0-9_\./\\-]*)"'
+    script_path = re.findall(pattern, tout)[0]
+    return script_path
+
+def get_exec_path_mode(mode, pkg):
+    ### this needs to be standardized
+    # exec/pkg_mode.R
+    script = "exec/{}_{}.R".format(pkg, mode)
+    return get_exec_path(script, pkg)
 
 
-MODE="${arr[0]}"
+## i am going for the simpler version first
+## there might be a way to do this with click
+## but i am not sure how to do it
 
-unset arr[0]
+## EXEC example
+## python3 regionmut.py bin -m exec -p pkg -o out
 
-# join rest of the array
-ARGUMENTS=""
+# sys.argv is the list of command-line arguments.
 
-for var in "${arr[@]}"
-do
-  ARGUMENTS="$ARGUMENTS ${var}"
-  # do something on $var
-done
+def main():
+    if len(sys.argv) == 0:
+        raise ValueError("No arguments passed")
+    # 0 is script
+    mode_sel = sys.argv[1]
+    other_args = sys.argv[2:]
+    args_str = " ".join(other_args)
+    print("mode -> {}".format(mode_sel))
+    print("args -> {}".format(args_str))
+    path_to_file = get_exec_path_mode(mode_sel, "regionMut")
+    print("path to file -> {}".format(path_to_file))
+    print(other_args)
+    other_args.insert(0, path_to_file)
+    print("full_cmd -> {}".format(" ".join(other_args)))
+    subprocess.run(other_args, check=True)
 
-echo "Arguments sent to regionmut $MODE, $ARGUMENTS"
-Rscript -e "source(file = system.file(\"exec/regionMut_$MODE.R\", package = \"regionMut\"))" $ARGUMENTS
-
-check_errs $? "regionMut returned an error"
-
-set +o noglob
+if __name__ == "__main__":
+    main()

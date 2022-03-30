@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -o noglob
+
+# funs:
+check_errs()
+{
+  #1 is err code
+  #2 is the err mssg
+  if [ "${1}" -ne "0" ]; then
+    echo "ERROR # ${1} : ${2}"
+    # I think we have to put this here too as it will exit afterwards
+	set +o noglob
+
+    exit ${1}
+  fi
+}
+
+arr=($*)
+echo "regionMut mode selected ${arr[0]}"
+
+
+MODE="${arr[0]}"
+
+unset arr[0]
+
+# join rest of the array
+ARGUMENTS=""
+
+for var in "${arr[@]}"
+do
+  ARGUMENTS="$ARGUMENTS ${var}"
+  # do something on $var
+done
+
+echo "Arguments sent to regionmut $MODE, $ARGUMENTS"
+Rscript -e "source(file = system.file(\"exec/regionMut_$MODE.R\", package = \"regionMut\"))" $ARGUMENTS
+
+check_errs $? "regionMut returned an error"
+
+set +o noglob
