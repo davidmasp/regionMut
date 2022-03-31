@@ -105,6 +105,13 @@ if(nrow(counts)> urow){
     )
 }
 
+if (sum(counts$ms_counts_all) == 0){
+  quit(save = "no",
+       status = 123,
+       runLast = FALSE)
+}
+
+
 dat = dplyr::left_join(counts,
                         offset,
                         by = c(group_vars,"ctx" = "ctx_simplified"))
@@ -142,8 +149,6 @@ if (!is.null(opt$percentage)){
   ))
 
 }
-
-
 
 dat$ln_at_risk = log(dat$N_samples * dat$ctx_counts_all)
 
@@ -219,6 +224,12 @@ if ("ci" %in% names(form_yml)){
 control_opt = glm.control(maxit = opt$maxit,
                           trace = opt$trace)
 
+if (length(unique(dat$ms_simplified)) == 1){
+  ## maybe update this further?
+  quit(save = "no",
+       status = 123,
+       runLast = FALSE)
+}
 
 glm_nb_wrapper(data = dat,
                formula = formula_str,
