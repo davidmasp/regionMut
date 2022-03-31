@@ -104,7 +104,6 @@ if(any(grepl(pattern = "NORMAL",x = sampleNames(dat_vr)))){
   stop("You have a normal sample in your vcf")
 }
 
-
 if (length(unique(sampleNames(dat_vr))) > 1){
   if (!is.null(opt$nSamples)){
     warning("Input is not unisample, forcing because -N is set")
@@ -210,7 +209,6 @@ MS = factor(MS,
 # I need to do this because the 0 are not couted otherwise
 table(MS,id = features_df$id) %>% as.data.frame() -> MS_df
 
-
 rg_id$id = factor(rg_id$id)
 dplyr::full_join(MS_df,rg_id) -> res_df
 
@@ -276,7 +274,6 @@ if (strandLess){
 }
 
 res_df_all_simp$N_samples = N_samples
-
 
 # filter by mutation set --------------------------------------------------
 
