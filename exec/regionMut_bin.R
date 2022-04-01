@@ -54,8 +54,6 @@ opt = parse_args(OptionParser(option_list=option_list))
 
 if (interactive()){
   warning("interacion mode!")
-  opt$bigWig = "~/../Desktop/test_miguel/E114-DNase.fc.signal.bigwig"
-  opt$mask = "~/../Desktop/test_miguel/test_hg19_no_overlap.bed"
 }
 
 # imports -----------------------------------------------------------------
