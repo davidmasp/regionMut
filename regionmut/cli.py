@@ -30,10 +30,12 @@ def cli():
     print(other_args)
     other_args.insert(0, path_to_file)
     print("full_cmd -> {}".format(" ".join(other_args)))
-    outprocess = subprocess.run(other_args, check=True)
+    outprocess = subprocess.run(other_args, check=False, capture_output=True)
     if outprocess.returncode == 0:
-        print("Successful run")
+        ## need to generate also the stdout?
+        print(outprocess.stderr)
     else:
+        print(outprocess.stderr)
         sys.exit(outprocess.returncode)
 
 if __name__ == "__main__":
