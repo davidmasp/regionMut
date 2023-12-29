@@ -63,14 +63,21 @@ opt = parse_args(OptionParser(option_list=option_list))
 options(verbose = opt$verbose)
 
 if(interactive()){
-  opt$offset = "inst/testdata/temp_files/output_offset.tsv"
-  opt$counts = "inst/testdata/temp_files/output_counts.tsv"
-  opt$formula = "inst/testdata/test.yml"
+  opt$offset = "./LMR_mskr_offset.tsv"
+  opt$counts = "./SBS60_LMR_mskr_concat_counts.tsv"
+  opt$formula = "./LMR_mskr_formula.yaml"
   opt$filterSet = NULL
+  opt$force = TRUE
 
   opt$trace = TRUE
   opt$maxit = 50
 }
+
+globals = list()
+out_path_globals = fs::path(opt$folder,
+                            glue::glue("{opt$prefix}_stats.json"))
+
+globals$options = opt
 
 # imports -----------------------------------------------------------------
 
@@ -106,11 +113,18 @@ if(nrow(counts)> urow){
 }
 
 if (sum(counts$ms_counts_all) == 0){
-  quit(save = "no",
-       status = 123,
-       runLast = FALSE)
+  err_mssg = "No mutations available for the regression!"
+  warning(err_mssg)
+  if (opt$force){
+    globals[["error"]] = err_mssg
+    jsonlite::write_json(x = globals, path = out_path_globals)
+    quit(save = "no", status = 0, runLast = FALSE)
+  } else {
+    quit(save = "no",
+         status = 129,
+         runLast = FALSE)
+  }
 }
-
 
 dat = dplyr::left_join(counts,
                         offset,
@@ -225,10 +239,19 @@ control_opt = glm.control(maxit = opt$maxit,
                           trace = opt$trace)
 
 if (length(unique(dat$ms_simplified)) == 1){
-  ## maybe update this further?
-  quit(save = "no",
-       status = 123,
-       runLast = FALSE)
+  ## I think using the same 123 code is not a good idea
+  ## potentially should fix elsewhere if this is a potential problem
+  error_mssg = "ERROR: Only one context has been selected"
+  warning(error_mssg)
+  if (opt$force){
+    globals[["error"]] = error_mssg
+    jsonlite::write_json(x = globals, path = out_path_globals)
+    quit(save = "no", status = 0, runLast = FALSE)
+  } else {
+    quit(save = "no",
+         status = 129,
+         runLast = FALSE)
+  }
 }
 
 glm_nb_wrapper(data = dat,
@@ -249,10 +272,18 @@ failed_regression = any(is.na(test_coef$estimate)) |
                     any(is.na(test_coef$ci_low))
 
 if(failed_regression & !opt$force){
+  warning("Stoping because regression did not converge, use --force to get out")
   quit(save = "no",
        status = 123,
        runLast = FALSE)
+} else if (failed_regression) {
+  globals[["error"]] = "Failed regression"
+  jsonlite::write_json(x = globals, path = out_path_globals)
+  quit(save = "no", status = 0, runLast = FALSE)
 } else {
+  globals[["error"]] = "no error"
+  jsonlite::write_json(x = globals, path = out_path_globals)
+
   fs::dir_create(opt$folder)
   opath = fs::path(opt$folder,
                  glue::glue("{opt$prefix}_coef.tsv"))

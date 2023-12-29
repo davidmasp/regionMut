@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Name: regionMut muts
+# Name: regionMut muts (per folder)
 # Author: DMP
 # Description: Count mutations in the given region sites
 
@@ -12,16 +12,15 @@ option_list = list(
   make_option(c("-m", "--mutations"),
               action="store",
               type='character',
-              help="a vcf, vranges or tsv file [default %default]"),
+              help="a folder with vcf, vranges or tsv files [default %default]"),
+  make_option(c("-t", "--type"),
+              action="store",
+              type='character',
+              help="the type of files provided [default %default]"),
   make_option(c("-r", "--regions"),
               action="store",
               type='character',
               help="list of regions comming from region subcommand [default %default]"),
-  make_option(c("-N", "--nSamples"),
-              action="store",
-              default = NULL,
-              type='integer',
-              help="Number of samples, if null, # of samp in the vcf [default %default]"),
   make_option(c("-k", "--kmer"),
               action="store",
               default = 1,
@@ -62,9 +61,10 @@ opt = parse_args(OptionParser(option_list=option_list))
 options(verbose = opt$verbose)
 
 if(interactive()){
-  opt$regions = "inst/testdata/temp_files/output_int_regions.rds"
-  opt$mutations = "inst/testdata/test_vcf.vcf"
+  opt$regions = "LMR_brain_int_regions.rds"
+  opt$mutations = "./data/"
   opt$folder = "inst/testdata/temp_files"
+  opt$type = "vcfAll"
 }
 
 # imports -----------------------------------------------------------------
@@ -77,27 +77,73 @@ library(regionMut)
 
 # data --------------------------------------------------------------------
 
-## determine format from the extension
+## get files:
+gtype = switch (opt$type,
+  "vcfz" = "*.vcf.gz",
+  "vcf" = "*.vcf",
+  "vcfAll" = c("*.vcf.gz","*.vcf"),
+  "vr" = "*.rds"
+)
 
-extension = tools::file_ext(opt$mutations)
-if (extension == "rds"){
-  dat_vr = readRDS(opt$mutations)
-} else {
-  dat_vcf = readVcf(opt$mutations)
-  dat_vr = as(dat_vcf,"VRanges")
+getFn <- function(x) {
+  if (endsWith(x, "vcf.gz")){
+    sname_res = stringr::str_extract(x, "[:graph:]+(?=.vcf.gz)")
+  } else if (endsWith(x, "vcf")) {
+    sname_res = stringr::str_extract(x, "[:graph:]+(?=.vcf)")
+  } else if (endsWith(x, "rds")) {
+    sname_res = stringr::str_extract(x, "[:graph:]+(?=.rds)")
+  } else {
+    stop("error!")
+  }
+  return(sname_res)
 }
 
-cnames = colnames(mcols(dat_vr))
-if (any(cnames == "MSks")) {
-  message("Using MS provided")
-  MS_from_VR = mcols(dat_vr)$MSks
-}
+gtype %>% purrr::map(function(x){
+  ifiles = fs::dir_ls(opt$mutations, glob = x)
+  ifiles
+}) %>% unlist() -> files
 
-mcols(dat_vr) = NULL
+names(files) = NULL
 
-if (any(cnames == "MSks")) {
-  mcols(dat_vr)$MSks = MS_from_VR
-}
+files %>% purrr::map(function(fn){
+  extension = tools::file_ext(fn)
+  sample_name = getFn(fs::path_file(fn))
+  if (extension == "rds"){
+    dat_vr = readRDS(fn)
+  } else {
+    dat_vcf = readVcf(fn)
+    dat_vr = as(dat_vcf,"VRanges")
+  }
+
+  sampleNames(dat_vr) %>% as.character() %>% unique() -> suin
+  stopifnot(length(suin) == 1)
+  sampleNames(dat_vr) = sample_name
+
+  cnames = colnames(mcols(dat_vr))
+  if (any(cnames == "MSks")) {
+    message("Using MS provided")
+    MS_from_VR = mcols(dat_vr)$MSks
+  }
+
+  mcols(dat_vr) = NULL
+
+  if (any(cnames == "MSks")) {
+    mcols(dat_vr)$MSks = MS_from_VR
+  }
+
+  dat_vr
+}) %>% VRangesList() %>% unlist() -> datvrl
+
+names(datvrl) = NULL
+
+unique(as.character(sampleNames(datvrl))) %>% length() -> len_sam
+stopifnot(len_sam == length(files))
+
+# rm(dat_vr)
+dat_vr = datvrl
+
+sample_lvl = sampleNames(dat_vr) %>% levels()
+opt$nSamples = length(files)
 
 ## indel filter
 nchar_ref = nchar(ref(dat_vr))
@@ -114,25 +160,11 @@ if(any(grepl(pattern = "NORMAL",x = sampleNames(dat_vr)))){
   stop("You have a normal sample in your vcf")
 }
 
-if (length(unique(sampleNames(dat_vr))) > 1){
-  if (!is.null(opt$nSamples)){
-    warning("Input is not unisample, forcing because -N is set")
-    sampleNames(dat_vr) = as.character("UNISAMPLE")
-  } else {
-    stop("Unisample vcf are required, remove sample info and add -N arg")
-  }
-}
-
-if (is.null(opt$nSamples)){
-  N_samples = 1
-} else {
-  N_samples = opt$nSamples
-}
+N_samples = 1
 
 regions = readRDS(opt$regions)
 
 # script ------------------------------------------------------------------
-
 
 ## filtering chromosome + names
 genome = helperMut::genome_selector(alias = opt$genome)
@@ -155,10 +187,13 @@ sqlevels = intersect(seqlevels(regions_grl),seqlevels(dat_vr))
 ol = length(dat_vr)
 dat_vr = dat_vr[seqnames(dat_vr) %in% sqlevels]
 el = length(dat_vr)
-scales::percent(el/ol)
+
+perc = scales::percent(el/ol)
+message(glue::glue("{perc} of mutations kept by seqlevels"))
 
 ## assigning mutations
-ovr = findOverlaps(query = dat_vr,subject = regions_grl)
+ovr = findOverlaps(query = dat_vr,
+                   subject = regions_grl)
 
 ## subset the mutations inside the regions
 ol = length(dat_vr)
@@ -174,7 +209,7 @@ dat_vr = keepSeqlevels(dat_vr,value = sqlevels)
 
 strand_ref_vec = unlist(lapply(regions_grl, function(x){
   unique(as.character(strand(x)))
-  }))
+}))
 strand_reg = strand_ref_vec[subjectHits(ovr)]
 ## dat_vr is already ordered from [^932172]
 strand(dat_vr) = strand_reg
@@ -191,7 +226,6 @@ if (any(cnames == "MSks")) {
                             genome = genome,
                             keep_strand = TRUE)
 }
-
 
 purrr::map_df(regions,function(x){
   df = dplyr::distinct(as.data.frame(mcols(x)))
@@ -217,15 +251,18 @@ stopifnot(all(names(regions_grl) == as.integer(rg_id$id)))
 features_df = rg_id[subjectHits(ovr),]
 rownames(features_df) = NULL
 
-features_df$id = factor(features_df$id,levels = rg_id$id)
+features_df$id = factor(features_df$id, levels = rg_id$id)
 
 MS = factor(MS,
             levels = helperMut::generate_mut_types(
               k = opt$kmer,
               simplify_set = Biostrings::DNA_BASES))
 
+samples = as.character(sampleNames(dat_vr)) %>%
+  factor(levels = sample_lvl)
+
 # I need to do this because the 0 are not couted otherwise
-table(MS,id = features_df$id) %>% as.data.frame() -> MS_df
+table(MS, sample = samples, id = features_df$id) %>% as.data.frame() -> MS_df
 
 rg_id$id = factor(rg_id$id)
 dplyr::full_join(MS_df,rg_id) -> res_df
@@ -242,55 +279,18 @@ strandLess = all(strand(dat_vr) == "*")
 
 if (strandLess){
   cnames = colnames(res_df)
-  cnames = cnames[4:ncol(res_df)]
-  group_vars = cnames
+  # this is the name of the feature
+  cnames = cnames[5:ncol(res_df)]
+  group_vars = c("sample",cnames)
   res_df$ms_simplified = helperMut::simplify_muts(as.character(res_df$MS),
-                                              simplify_set = ref_set)
+                                                  simplify_set = ref_set)
   res_df %>% dplyr::group_by_at(c(group_vars,"ms_simplified")) %>%
     dplyr::summarise(ms_counts_all = sum(Freq)) -> res_df_all_simp
 } else{
-  # with strand info
-  # find which columns have the strand info
-  cnames = colnames(res_df)
-  cnames = cnames[4:ncol(res_df)]
-
-  ## strand features need to carry minus
-  strand_mask = res_df[,cnames] %>% purrr::map(grepl,
-                                               pattern = "minus" ) %>%
-    purrr::map_lgl(any)
-  group_vars = cnames[!strand_mask]
-  group_vars_std = cnames[strand_mask]
-
-  stopifnot(length(group_vars_std) == 1)
-
-  res_df[[group_vars_std]] %>%
-    stringr::str_extract("(?<=_)[:alnum:]+") -> std_group
-
-  res_df[[group_vars_std]] %>%
-    stringr::str_extract("[:alnum:]+(?=_)") -> feat_group
-
-  feat_group = unique(feat_group)
-  stopifnot(length(feat_group) == 1)
-
-  res_df$ms_simplified =
-    helperMut::simplify_muts(muts = as.character(res_df$MS),
-                             simplify_set = ref_set)
-
-  feat_name_true = glue::glue("{group_vars_std}_{feat_group}_ref")
-  feat_name_false = glue::glue("{group_vars_std}_anti{feat_group}_ref")
-  k = opt$kmer
-
-  res_df[[group_vars_std]] = ifelse(
-    substr(x = res_df$MS, k + 1, k + 1) %in% ref_set,
-    feat_name_true,
-    feat_name_false
-  )
-
-  res_df %>% dplyr::ungroup() %>%
-    dplyr::group_by_at(c(group_vars,group_vars_std,"ms_simplified")) %>%
-    dplyr::summarise(ms_counts_all = sum(Freq)) -> res_df_all_simp
+  stop("NOT IMPLEMENTED!")
 }
 
+# this is 1!
 res_df_all_simp$N_samples = N_samples
 
 # filter by mutation set --------------------------------------------------
@@ -301,11 +301,20 @@ if (!is.null(opt$filterSet)){
   res_df_all_simp %<>% dplyr::filter(ms_simplified %in% mutSet)
 }
 
+# split table -------------------------------------------------------------
+
+res_df_all_simp %>% split(.$sample) %>%
+  purrr::map(function(df){
+    sname = unique(df$sample) %>% as.character()
+    df %<>% dplyr::ungroup() %>% dplyr::select(-sample)
+    fs::dir_create(opt$folder)
+    opath = fs::path(opt$folder,
+                     glue::glue("{sname}_{opt$prefix}_counts.tsv"))
+    readr::write_tsv(x = df,
+                     file = opath)
+  })
+
 # output ------------------------------------------------------------------
 
-fs::dir_create(opt$folder)
-opath = fs::path(opt$folder,
-                 glue::glue("{opt$prefix}_counts.tsv"))
-readr::write_tsv(x = res_df_all_simp,
-                 path = opath)
+
 
